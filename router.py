@@ -1,5 +1,5 @@
 import sys
-from config import *
+from parser import *
 
 from socket import *
 

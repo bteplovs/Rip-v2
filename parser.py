@@ -1,27 +1,22 @@
-import sys
-import os
 from dataclasses import dataclass
+
+
+#TODO: Check router IDs for uniqueness here!
+
 
 @dataclass
 class Output:
-    output_port: int #the port number on which the peer router will listen to packets from the current instance. TODO can be renamed to output port?
-    metric: int # represents the metric value for the link to the peer router
-    router_id: int # the router-id of the peer route
+    output_port: int
+    metric: int
+    router_id: int
 
-class Config:
+class Parser:
     def __init__(self):
         self.router_id = -1
         self.input_ports = []
         self.output_ports = []
 
-    def read_config(self, config_file):
-
-        file_path = self.get_config_path(config_file)
-
-        if (not self.config_file_exists(file_path)):
-            print("ERROR: invalid file format", file=sys.stderr)
-            sys.exit(1)
-        
+    def read_config(self, file_path):
 
         with open(file_path, "r") as file:
             for line in file:
@@ -36,7 +31,7 @@ class Config:
                 else:
                     raise Exception("ERROR: Misformed config file")
 
-    def validate_router_id(line): #TODO:  Each router must have its own unique router-id
+    def validate_router_id(line):
         try:
             _, router_id = line.split()
             if len(line.split()) != 2:
@@ -82,7 +77,4 @@ class Config:
             return outputs_list
         except ValueError:
             raise ValueError("ERROR: Invalid outputs")
-
-    def get_config_path(config_file):
-        return os.path.join("config-files", config_file)
 
