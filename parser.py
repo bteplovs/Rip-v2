@@ -11,7 +11,7 @@ def read_config(argv):
         print("ERROR: One command-line argument required: config-file", file=sys.stderr)
         sys.exit(1)
     
-    _, config_file = argv
+    config_file = argv[1]
 
     file_path = get_config_path(config_file)
 
