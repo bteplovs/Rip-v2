@@ -1,6 +1,8 @@
 import sys
-import parser
-from parser import *
+from config import *
+
+from socket import *
+
 
 
 # Runs the main loop
@@ -8,14 +10,21 @@ from parser import *
 
 class Router:
 
-    def __init__(self):
-        pass
+    def __init__(self, id, inputs, outputs):
+        self.id = id
+        self.inputs = inputs
+        self.outputs = outputs
 
-    def run():
+        self.time_out = None #SOME GLOBAL VAR 180 seconds
+        self.garbage_collection = None #SOME GLOBAL VAR 120 seconds
+
+
+    def run(self):
         
-        # read config file
-        router_id, input_ports, outputs = read_config(sys.argv)
+        print(f"RIP router {self.id} successfully initilised")
 
+        #create routing table
+        # Routing
         # create sockets
 
         #enter infinite loop
@@ -25,10 +34,3 @@ class Router:
             #use select() check for routing packet recieved from peer or timer event
             # handle events atomically!!!!
             # 
-
-
-
-
-if __name__ == "__main__":
-    router = Router()
-    router.run()
