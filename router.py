@@ -1,5 +1,6 @@
 from socket import *
 import routing_table
+from constant import *
 
 class Router:
 
@@ -8,17 +9,11 @@ class Router:
         self.inputs = inputs
         self.outputs = outputs
         self.rt = routing_table.RoutingTable(id)
-
-        self.time_out = None #SOME GLOBAL VAR 180 seconds
-        self.garbage_collection = None #SOME GLOBAL VAR 120 seconds
-
-        
-        
-
+        self.sockets = self.create_sockets()
 
     def run(self):
 
-        #enter infinite loop
+        # enter infinite loop
         routing = True
         while routing:
             pass
