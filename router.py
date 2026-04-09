@@ -7,9 +7,21 @@ class Router:
     def __init__(self):
         pass
 
-
     def run():
-        pass
+        
+        # read config file
+
+        # create sockets
+
+        #enter infinite loop
+        routing = True
+        while routing:
+            pass
+            #use select() check for routing packet recieved from peer or timer event
+            # handle events atomically!!!!
+            # 
+
+
 
 
 if __name__ == "__main__":
