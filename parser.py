@@ -31,7 +31,7 @@ class Parser:
                 else:
                     raise Exception("ERROR: Misformed config file")
 
-    def validate_router_id(line):
+    def validate_router_id(self, line):
         try:
             _, router_id = line.split()
             if len(line.split()) != 2:
@@ -43,7 +43,7 @@ class Parser:
         except ValueError:
             raise ValueError("ERROR: Invalid router-id")
 
-    def validate_input_ports(line): 
+    def validate_input_ports(self, line): 
         try:
             _, ports = line.split(" ", 1)
             ports = [int(port.strip()) for port in ports.split(",")]
@@ -56,7 +56,7 @@ class Parser:
         except ValueError:
             raise ValueError("ERROR: Invalid input ports")
 
-    def validate_outputs(line, input_ports):
+    def validate_outputs(self, line, input_ports):
         try:
             _, outputs = line.split(" ", 1)
             outputs_list = []
@@ -67,6 +67,8 @@ class Parser:
                 
                 input_port_of_peer, metric, router_id = map(int, parts)
                 if router_id < 0 or router_id > 64000:
+                    raise ValueError
+                if metric < 0:
                     raise ValueError
                 if input_port_of_peer < 1024 or input_port_of_peer > 64000:
                     raise ValueError

@@ -1,12 +1,5 @@
-import sys
-from parser import *
-
 from socket import *
-
-
-
-# Runs the main loop
-# hands over packets to rip.py
+import routing_table
 
 class Router:
 
@@ -14,18 +7,16 @@ class Router:
         self.id = id
         self.inputs = inputs
         self.outputs = outputs
+        self.rt = routing_table.RoutingTable(id)
 
         self.time_out = None #SOME GLOBAL VAR 180 seconds
         self.garbage_collection = None #SOME GLOBAL VAR 120 seconds
 
+        
+        
+
 
     def run(self):
-        
-        print(f"RIP router {self.id} successfully initilised")
-
-        #create routing table
-        # Routing
-        # create sockets
 
         #enter infinite loop
         routing = True
