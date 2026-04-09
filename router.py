@@ -1,3 +1,7 @@
+import sys
+import parser
+from parser import *
+
 
 # Runs the main loop
 # hands over packets to rip.py
@@ -10,7 +14,8 @@ class Router:
     def run():
         
         # read config file
-
+        read_config(sys.argv)
+        
         # create sockets
 
         #enter infinite loop
