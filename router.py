@@ -14,8 +14,8 @@ class Router:
     def run():
         
         # read config file
-        read_config(sys.argv)
-        
+        router_id, input_ports, outputs = read_config(sys.argv)
+
         # create sockets
 
         #enter infinite loop
