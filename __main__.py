@@ -25,14 +25,13 @@ def main():
     try:
         print(f"Reading {config_file}...")
         router = parser.Parser()
-        router.read_config_file(file_path)
+        router.read_config(file_path)
         print(f"{config_file} successfully read")
-    except:
-        print("ERROR: Failed to read config file")
-        sys.exit(1)
+    except Exception as e:
+        print("ERROR:", e)
 
     try:
-        print(f"initilising RIP router: {router.router_id}...")
+        print(f"initilising RIP router with ID: {router.router_id}")
         router = router.Router(router.router_id, router.input_ports, router.output_ports)
         router.run()
     except:

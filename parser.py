@@ -15,7 +15,7 @@ class Parser:
         self.output_ports = []
 
     def read_config(self, config_path):
-
+        
         config = configparser.ConfigParser()
         config.read(config_path)
 
@@ -47,7 +47,6 @@ class Parser:
                 raise ValueError("ERROR: invalid port")
 
     def valid_outputs(self, outputs):  
-
         for output in outputs:
 
             port, metric, rid = output.port, output.metric, output.router_id
@@ -72,7 +71,7 @@ class Parser:
             if output.port in output_set:
                 raise ValueError()
 
-            output_set.add(output.output_port)
+            output_set.add(output.port)
     
     def parse_output(self, config):
         outputs = []
