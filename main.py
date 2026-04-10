@@ -31,7 +31,7 @@ def main():
         print("ERROR:", e)
 
     try:
-        print(f"initilising RIP router with ID: {router.router_id}")
+        print(f"Initilising RIP router with ID: {router.router_id}")
         router = router.Router(router.router_id, router.input_ports, router.output_ports)
         router.run()
     except:
