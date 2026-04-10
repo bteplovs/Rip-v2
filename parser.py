@@ -1,18 +1,17 @@
-from dataclasses import dataclass
 from constant import *
 import configparser
 
-@dataclass
 class Neighbour:
-    port: int
-    metric: int
-    id: int
+    def __init__(self, port, metric, id):
+        self.port = port
+        self.metric = metric
+        self.id = id
 
 class Parser:
     def __init__(self):
         self.router_id = -1
         self.input_ports = []
-        self.neighbour = []
+        self.neighbours = []
 
     def read_config(self, config_path):
         
@@ -20,34 +19,35 @@ class Parser:
         config.read(config_path)
 
         # TODO: The first three parameters (router-id, input-ports, outputs) are mandatory
+        # TODO: Descriptive error messages!
 
         router = config["Router"]
         router_id = int(router["router-id"])
         input_ports = [int(p.strip()) for p in router["input-ports"].split(",")]
 
-        neighbours = self.parse_neighbour(router)
+        router_neighbours = self.parse_neighbour(router)
 
         self.valid_router_id(router_id)
         self.valid_input_ports(input_ports)
-        self.valid_neighbours(neighbours)
+        self.valid_neighbours(router_neighbours)
 
         self.router_id = router_id
         self.input_ports = input_ports
 
-        self.valid_neighbour_ports(neighbours)
+        self.valid_neighbour_ports(router_neighbours)
 
-        self.neighbour = neighbours
+        self.neighbours = router_neighbours
 
     def valid_router_id(self, router_id):
         if router_id < MIN_ROUTER_ID or router_id > MAX_ROUTER_ID:
-            raise ValueError("ERROR: invalid router ID")
+            raise ValueError("ERROR: Invalid router ID")
 
     def valid_input_ports(self, ports): 
         if len(set(ports)) != len(ports):
-            raise ValueError("ERROR: duplicate ports")
+            raise ValueError("ERROR: Duplicate ports")
         for port in ports:
             if port < MIN_PORT or port > MAX_PORT:
-                raise ValueError("ERROR: invalid port")
+                raise ValueError("ERROR: Invalid port")
 
     def valid_neighbours(self, neighbours):  
         for neighbour in neighbours:
@@ -55,13 +55,13 @@ class Parser:
             port, metric, rid = neighbour.port, neighbour.metric, neighbour.id
 
             if rid < MIN_ROUTER_ID or rid > MAX_ROUTER_ID:
-                raise ValueError
+                raise ValueError("ERROR: Invalid router ID")
             
             if port < MIN_PORT or port > MAX_PORT:
-                raise ValueError
+                raise ValueError("ERROR: Invalid port")
             
             if metric < 0:
-                raise ValueError
+                raise ValueError("ERROR: Invalid metric")
 
     def valid_neighbour_ports(self, neighbours):
         input_set = set(self.input_ports)
@@ -69,10 +69,10 @@ class Parser:
 
         for neighbour in neighbours:
             if neighbour.port in input_set:
-                raise ValueError()
+                raise ValueError("ERROR: Duplicate ports")
 
             if neighbour.port in output_set:
-                raise ValueError()
+                raise ValueError("ERROR: Duplicate ports")
 
             output_set.add(neighbour.port)
     
@@ -81,7 +81,7 @@ class Parser:
         for entry in config["outputs"].split(","):
             parts = entry.strip().split("-")
             if len(parts) != 3:
-                raise ValueError(f"Invalid output format: {entry}")
+                raise ValueError("ERROR: Invalid neighbours")
 
             port, metric, id = map(int, parts)
             outputs.append(Neighbour(port, metric, id))

@@ -2,6 +2,7 @@ import sys
 import os
 
 import parser
+import router
 
 def get_config_path(config_file):
         return os.path.join("config-files", config_file)
@@ -24,19 +25,18 @@ def main():
     
     try:
         print(f"Reading {config_file}...")
-        router = parser.Parser()
-        router.read_config(file_path)
+        parsed_router = parser.Parser()
+        parsed_router.read_config(file_path)
         print(f"{config_file} successfully read")
     except Exception as e:
         print("ERROR:", e)
 
     try:
-        print(f"Initilising RIP router with ID: {router.router_id}")
-        router = router.Router(router.router_id, router.input_ports, router.output_ports)
-        router.run()
-    except:
-        print("ERROR: Failed to start RIP Router")
-        sys.exit(1)
+        print(f"Initilising RIP router with ID: {parsed_router.router_id}")
+        RIP_router = router.Router(parsed_router.router_id, parsed_router.input_ports, parsed_router.neighbours)
+        RIP_router.run()
+    except Exception as e:
+        print("ERROR:", e)
 
 if __name__ == "__main__":
     main()
