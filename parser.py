@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from constant import *
+import configparser
 
 @dataclass
 class Output:
-    output_port: int
+    port: int
     metric: int
     router_id: int
 
@@ -13,93 +14,74 @@ class Parser:
         self.input_ports = []
         self.output_ports = []
 
-    def read_config(self, file_path):
-        with open(file_path, "r") as file:
-            for line in file:
-                line = line.strip()
+    def read_config(self, config_path):
 
-                if not line or line.startswith("#"):
-                    continue
+        config = configparser.ConfigParser()
+        config.read(config_path)
 
-                if line.startswith("router-id"):
-                    self.router_id = self.validate_router_id(line)
+        router = config["Router"]
+        router_id = int(router["router-id"])
+        input_ports = [int(p.strip()) for p in router["input-ports"].split(",")]
+        outputs = self.parse_output(router)
 
-                elif line.startswith("input-ports"):
-                    self.input_ports = self.validate_input_ports(line)
+        self.valid_router_id(router_id)
+        self.valid_input_ports(input_ports)
+        self.valid_outputs(outputs)
 
-                elif line.startswith("outputs"):
-                    self.output_ports = self.validate_outputs(line)
-                else:
-                    raise ValueError("ERROR: Malformed config file")
-        
-        self.validate_ports()
+        self.router_id = router_id
+        self.input_ports = input_ports
 
-    def validate_router_id(self, line):
-        try:
-            _, router_id = line.split()
+        self.valid_output_ports(outputs)
 
-            if len(line.split()) != 2:
+        self.output_ports = outputs
+
+    def valid_router_id(self, router_id):
+        if router_id < MIN_ROUTER_ID or router_id > MAX_ROUTER_ID:
+            raise ValueError("ERROR: invalid router ID")
+
+    def valid_input_ports(self, ports): 
+        if len(set(ports)) != len(ports):
+            raise ValueError("ERROR: duplicate ports")
+        for port in ports:
+            if port < MIN_PORT or port > MAX_PORT:
+                raise ValueError("ERROR: invalid port")
+
+    def valid_outputs(self, outputs):  
+
+        for output in outputs:
+
+            port, metric, rid = output.port, output.metric, output.router_id
+
+            if rid < MIN_ROUTER_ID or rid > MAX_ROUTER_ID:
                 raise ValueError
-            router_id = int(router_id)
-
-            if router_id < MIN_ROUTER_ID or router_id > MAX_ROUTER_ID:
+            
+            if port < MIN_PORT or port > MAX_PORT:
                 raise ValueError
-            return router_id
-        except ValueError:
-            raise ValueError("ERROR: Invalid router-id")
-
-    def validate_input_ports(self, line): 
-        try:
-            _, ports = line.split(" ", 1)
-            ports = [int(port.strip()) for port in ports.split(",")]
-
-            if len(set(ports)) != len(ports):
+            
+            if metric < 0:
                 raise ValueError
-            for port in ports:
 
-                if port < MIN_PORT or port > MAX_PORT:
-                    raise ValueError
-            return ports
-        except ValueError:
-            raise ValueError("ERROR: Invalid input ports")
-
-    def validate_outputs(self, line):
-        try:
-            _, outputs_str = line.split(" ", 1)
-            outputs = []
-            for entry in outputs_str.split(','):
-                parts = entry.strip().split("-")
-
-                if (len(parts)) != 3:
-                    raise ValueError
-                
-                port, metric, router_id = map(int, parts)
-
-                if router_id < MIN_ROUTER_ID or router_id > MAX_ROUTER_ID:
-                    raise ValueError
-                
-                if port < MIN_PORT or port > MAX_PORT:
-                    raise ValueError
-                
-                if metric < 0:
-                    raise ValueError
-
-                outputs.append(Output(port, metric, router_id))
-            return outputs
-        except ValueError:
-            raise ValueError("ERROR: Invalid outputs")
-
-    def validate_ports(self):
+    def valid_output_ports(self, outputs):
         input_set = set(self.input_ports)
         output_set = set()
 
-        for output in self.output_ports:
-            if output.output_port in input_set:
+        for output in outputs:
+            if output.port in input_set:
                 raise ValueError()
 
-            if output.output_port in output_set:
+            if output.port in output_set:
                 raise ValueError()
 
             output_set.add(output.output_port)
+    
+    def parse_output(self, config):
+        outputs = []
+        for entry in config["outputs"].split(","):
+            parts = entry.strip().split("-")
+            if len(parts) != 3:
+                raise ValueError(f"Invalid output format: {entry}")
 
+            port, metric, rid = map(int, parts)
+            outputs.append(Output(port, metric, rid))
+        return outputs
 

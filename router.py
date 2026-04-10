@@ -19,4 +19,5 @@ class Router:
             pass
             #use select() check for routing packet recieved from peer or timer event
             # handle events atomically!!!!
-            # 
+            # for each rt entry
+            # check if entry is valid, check if expired, check if not valid is it garbage day?
