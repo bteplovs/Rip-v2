@@ -4,6 +4,7 @@ from constant import *
 import time
 import select
 import random
+import packet
 
 class Router:
 
@@ -12,29 +13,31 @@ class Router:
         self.inputs = inputs
         self.neighbours = outputs
         self.routing_table = routing_table.RoutingTable(id)
-        self.periodic_timer = PERIODIC * random.randint(0.8, 1.2)
+        self.periodic_timer = self.set_periodic_timer()
+        self.periodic_clock = 0
         self.sockets = self.create_sockets(inputs)
         self.out_socket = self.sockets[0]
         self.routing = True
 
+    def set_periodic_timer(self):
+        self.periodic_timer = PERIODIC * random.uniform(0.8, 1.2)
+
     def create_sockets(self, inputs):
         sockets = []
         for input in inputs:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.bind((LOCALHOST, input))
-            sockets.append(sock)
+            s = socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.bind((LOCALHOST, input))
+            sockets.append(s)
         return sockets
     
-    def periodic_update(self):
-        pass
-        # Regarding periodic updates: You need to find out how to generate periodic timer
-        # events and how to write own handlers for this event. It could also be useful to
-        # introduce some randomness to the periodic updates, for example by setting the
-        # timer in question randomly to a value that is uniformly distributed over the range
-        # [0.8 · period, 1.2 · period]. Why could such a randomization be useful?
+    def send_update(self, routes):
+        for neighbour in self.neighbours:
+            packet_to_send = packet.create_packet(routes, self.id, neighbour.id)
+            socket.sendto(neighbour.port ,packet_to_send)
 
-        # basicallyt send full routing table to neighbors!
-        
+
+    def send_route(self):
+        pass
 
     def run(self):
         now = time.time()
@@ -44,26 +47,23 @@ class Router:
             elapsed_time = current - now
             now = current
 
-            elapsed_time = time.time() - now
+            self.periodic_clock += elapsed_time
 
             readable, _, exceptional = select.select(self.sockets, [], self.sockets, 1)
 
-            # Readable returns sockets which have data to be processed!
+            for sock in readable:
+                data, address = sock.recvfrom(BUFFER)
+                update = packet.process_packet(data)
+                if update:
+                    changed_routes = self.routing_table.update_routing_table(update, address)
+                    if changed_routes:
+                        self.send_update(changed_routes)
+                    
+            updates = self.routing_table.update_route_timers(elapsed_time)
+            if updates:
+                self.send_update(updates)
 
-            update_triggered = self.routing_table.update_routes(elapsed_time)
-
-            if update_triggered:
-                pass
-                # basicallyt send full routing table to neighbors!
-
-            self.periodic_update()
-
-            continue
-
-            # if readable update routing table and send a response back!
-
-
-            #use select() check for routing packet recieved from peer or timer event
-            # handle events atomically!!!!
-            # for each rt entry
-            # check if entry is valid, check if expired, check if not valid is it garbage day?
+            if self.periodic_clock >= self.periodic_timer:
+                self.send_update(self.routing_table.entries.values())
+                self.periodic_clock = 0
+                self.periodic_timer = self.set_periodic_timer()
