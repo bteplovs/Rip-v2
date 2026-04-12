@@ -7,11 +7,11 @@ class RouteState(Enum):
     GARBAGE = 3
 
 class RoutingEntry:
-    def __init__(self, next_hop, metric):
+    def __init__(self, next_hop, metric, state=RouteState.VALID):
         self.next_hop = next_hop
         self.metric = metric
         self.clock = 0
-        self.state = RouteState.VALID
+        self.state = state
 
     def reset_clock(self):
         self.clock = 0
@@ -42,11 +42,26 @@ class RoutingTable:
     def delete_route(self, destination):
         self.entries.pop(destination, None)
 
-    def update_routes(self, clock):
+    def update_routes(self, elapsed_time):
+        trigger_update = False
+        to_delete = []
 
-        for destination, entry in self.entries:
-            #TODO: check state and timer for garbage, and validity
-            pass
+        for destination, entry in self.entries.items():
+            entry.clock += elapsed_time
 
-    def __str__():
+            if entry.state == RouteState.VALID and entry.clock > TIMEOUT:
+                entry.set_invalid()
+                entry.set_metric_inf()
+                entry.reset_clock()
+                trigger_update = True
+
+            elif entry.state == RouteState.INVALID and entry.clock > GARBAGE:
+                to_delete.append(destination)
+
+        for destination in to_delete:
+            self.delete_route(destination)
+
+        return trigger_update
+
+    def __str__(self):
         pass
