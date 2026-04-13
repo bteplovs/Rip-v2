@@ -57,7 +57,7 @@ class Parser:
             if port < MIN_PORT or port > MAX_PORT:
                 raise ValueError("ERROR: Invalid port")
             
-            if metric < 0:
+            if metric < 1 or metric > MAX_METRIC:
                 raise ValueError("ERROR: Invalid metric")
 
     def valid_neighbour_ports(self, neighbours):

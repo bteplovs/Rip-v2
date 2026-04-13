@@ -1,47 +1,14 @@
 from constant import *
-from enum import Enum
-
-class RouteState(Enum):
-    VALID = 1
-    INVALID = 2
-    GARBAGE = 3
-
-class RoutingEntry:
-    def __init__(self, next_hop, metric, state=RouteState.VALID):
-        self.next_hop = next_hop
-        self.metric = metric
-        self.clock = 0
-        self.state = state
-
-    def reset_clock(self):
-        self.clock = 0
-
-    def set_metric(self, metric):
-        self.metric = metric
-    
-    def set_next_hop(self, next_hop):
-        self.next_hop = next_hop
-
-    def set_metric_inf(self):
-        self.metric = INFINITY
-
-    def set_garbage(self):
-        self.state = RouteState.GARBAGE
-
-    def set_invalid(self):
-        self.state = RouteState.INVALID
-    
-    def set_valid(self):
-        self.state = RouteState.VALID
+import routing_entry
 
 class RoutingTable:
     def __init__(self, router_id):
         self.id = router_id
         self.entries = {}
-    
+
     def add_route(self, destination, next_hop, metric):
-        self.entries[destination] = RoutingEntry(next_hop, metric)
-    
+        self.entries[destination] = routing_entry.RoutingEntry(next_hop, metric)
+
     def delete_route(self, destination):
         self.entries.pop(destination, None)
 
@@ -50,49 +17,74 @@ class RoutingTable:
         triggered_entries = []
 
         for destination, entry in self.entries.items():
+
             entry.clock += elapsed_time
 
-            if entry.state == RouteState.VALID and entry.clock > TIMEOUT:
+            if entry.state == routing_entry.RouteState.VALID and entry.clock > TIMEOUT:
+                print(f"  TIMEOUT: dest={destination} clock={entry.clock:.1f}")
                 entry.set_invalid()
                 entry.set_metric_inf()
                 entry.reset_clock()
-                triggered_entries.append(entry)
+                triggered_entries.append((destination, entry))
 
-            elif entry.state == RouteState.INVALID and entry.clock > GARBAGE:
-                entry.set_garbage()
-                to_delete.append(destination)
+            elif entry.state == routing_entry.RouteState.INVALID and entry.clock > GARBAGE:
+                to_delete.append(destination) 
 
         for destination in to_delete:
             self.delete_route(destination)
 
         return triggered_entries
 
-    def update_routing_table(self, recieved_routes):
+    def update_routing_table(self, received_routes):
+        changed_routes = {}
+        for dest, metric, sender_id in received_routes:
+            print(f"  received: dest={dest} metric={metric} sender={sender_id}")
+            if sender_id not in self.entries:
+                print(f"  skipping: sender {sender_id} not in table")
+                continue
 
-        changed_routes = []
+            cost_to_sender = self.entries[sender_id].metric
+            new_metric = min(metric + cost_to_sender, INFINITY)
 
-        for destination, metric, sender_id in recieved_routes:
+            # refresh clock on direct neighbour
+            if dest == sender_id:
+                self.entries[dest].reset_clock()
+                self.entries[dest].set_valid()
+                continue
 
-            new_metric = min(metric + 1, INFINITY)
+            # Create new entry
+            if dest not in self.entries:
+                if new_metric < INFINITY:
+                    self.entries[dest] = routing_entry.RoutingEntry(sender_id, new_metric)
+                    changed_routes[dest] = self.entries[dest]
+                continue
 
-            if destination not in self.entries:
-                self.entries[destination] = RoutingEntry(sender_id, new_metric)
-                changed_routes.append(destination)
-            
-            entry = self.entries[destination]
+            entry = self.entries[dest]
 
-            if new_metric < entry.metric:
+            # Invalid metric, update entry
+            if new_metric == INFINITY:
+                entry.set_invalid()
+                entry.set_metric_inf()
+                entry.reset_clock()
+                changed_routes[dest] = entry
+
+            # If metrics improve update entry
+            elif new_metric < entry.metric:
                 entry.metric = new_metric
                 entry.next_hop = sender_id
                 entry.reset_clock()
                 entry.set_valid()
-                changed_routes.append(destination)
+                changed_routes[dest] = entry
             
+            # If next hop is sender, update entry
             elif entry.next_hop == sender_id:
                 entry.metric = new_metric
                 entry.reset_clock()
-                changed_routes.append(destination)
-        
+                entry.set_valid()
+                changed_routes[dest] = entry
+            else:
+                entry.reset_clock()
+
         return changed_routes
 
     def __str__(self):
@@ -100,12 +92,13 @@ class RoutingTable:
         divider = "-" * len(header)
         title = f"# Routing Table (Router {self.id}) #".center(len(header))
         lines = ["", title, divider, header, divider]
-        if self.entries.items():
+
+        if self.entries:
             for dest, e in self.entries.items():
                 lines.append(f"{dest:>6} {e.next_hop:>9} {e.metric:>7} {e.clock:>7.1f} {e.state.name:>8}")
         else:
             lines.append("# NO ENTRIES #".center(len(header)))
+
         lines.append(divider)
         lines.append("")
         return "\n".join(lines)
-        

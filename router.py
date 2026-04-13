@@ -30,18 +30,16 @@ class Router:
             sockets.append(s)
         return sockets
     
-    def send_update(self, routes):
+    def send_update(self, entries):
         for neighbour in self.neighbours:
-            packet_to_send = packet.create_packet(routes, self.id, neighbour.id)
+            packet_to_send = packet.create_packet(entries, self.id, neighbour.id)
             self.out_socket.sendto(packet_to_send, (LOCALHOST, neighbour.port))
 
     def run(self):
         now = time.time()
 
-        #populate initial routing table
         for neighbour in self.neighbours:
-            _, metric, rid = neighbour.port, neighbour.metric, neighbour.id
-            self.routing_table.add_route(rid, rid, metric)
+            self.routing_table.add_route(neighbour.id, neighbour.id, neighbour.metric)
 
         while self.routing:
             current = time.time()
@@ -55,20 +53,21 @@ class Router:
             if readable:
                 for sock in readable:
                     data, address = sock.recvfrom(BUFFER)
+                    # Returns RoutingEntry objects
                     update = packet.process_packet(data)
                     if update:
-                        changed_routes = self.routing_table.update_routing_table(update, address)
-                        if changed_routes:
-                            self.send_update(changed_routes)
-                            print(self.routing_table)
-                    
+                        changed = self.routing_table.update_routing_table(update)
+                        if changed:
+                            self.send_update(changed.items())
+                            
+            # Returns RoutingEntry objects
             updates = self.routing_table.update_route_timers(elapsed_time)
             if updates:
                 self.send_update(updates)
                 print(self.routing_table)
 
             if self.periodic_clock >= self.periodic_timer:
-                self.send_update(self.routing_table.entries.values())
+                self.send_update(self.routing_table.entries.items())
                 self.periodic_clock = 0
                 self.periodic_timer = self.set_periodic_timer()
                 print(self.routing_table)
