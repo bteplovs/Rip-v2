@@ -54,15 +54,21 @@ class Router:
                     changed_routes = self.routing_table.update_routing_table(update, address)
                     if changed_routes:
                         self.send_update(changed_routes)
+                        print("Printing RT after updated route values")
+                        self.routing_table.__str__()
                     
             updates = self.routing_table.update_route_timers(elapsed_time)
             if updates:
                 self.send_update(updates)
+                print("Printing RT after updated route timers")
+                self.routing_table.__str__()
 
             if self.periodic_clock >= self.periodic_timer:
                 self.send_update(self.routing_table.entries.values())
                 self.periodic_clock = 0
                 self.periodic_timer = self.set_periodic_timer()
+                print("Printing RT after periodic update")
+                self.routing_table.__str__()
             
             if exceptional:
                 for sock in exceptional:

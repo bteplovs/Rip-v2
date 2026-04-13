@@ -96,4 +96,10 @@ class RoutingTable:
         return changed_routes
 
     def __str__(self):
-        pass
+        wall = ("#" * 52)
+        output = [wall, "| Router Id | Next Hop | Metric | Clock | Status |"]
+        for route in self.entries:
+            output.append(f"| {self.id} | {route.next_hop} | {route.metric} | {route.clock} | {route.status} |")
+        output.append(wall)
+        return output
+        
