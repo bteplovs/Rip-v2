@@ -98,10 +98,14 @@ class RoutingTable:
     def __str__(self):
         header = f"{'Dest':>6} {'Next Hop':>9} {'Metric':>7} {'Clock':>7} {'State':>8}"
         divider = "-" * len(header)
-        title = f"Routing Table (Router {self.id})"
-        lines = [title, divider, header, divider]
-        for dest, e in self.entries.items():
-            lines.append(f"{dest:>6} {e.next_hop:>9} {e.metric:>7} {e.clock:>7.1f} {e.state.name:>8}")
+        title = f"# Routing Table (Router {self.id}) #".center(len(header))
+        lines = ["", title, divider, header, divider]
+        if self.entries.items():
+            for dest, e in self.entries.items():
+                lines.append(f"{dest:>6} {e.next_hop:>9} {e.metric:>7} {e.clock:>7.1f} {e.state.name:>8}")
+        else:
+            lines.append("# NO ENTRIES #".center(len(header)))
         lines.append(divider)
+        lines.append("")
         return "\n".join(lines)
         
