@@ -11,8 +11,8 @@ class RIPHeader:
 class RIPEntry:
     def __init__(self, next_hop, metric):
         self.data = bytearray(4)
-        self.data[0] = next_hop
-        self.data[1] = metric
+        self.data[0:2] = next_hop
+        self.data[2:4] = metric
 
 
 def process_packet(data):
@@ -50,7 +50,7 @@ def create_packet(routes, id, neighbour_id):
         metric = apply_poison_reverse(route, neighbour_id)
 
         entry = RIPEntry(route.next_hop.to_bytes(2, "big"), metric.to_bytes(2, "big"))
-        packet.extend(entry)
+        packet.data.extend(entry)
 
     return packet
 

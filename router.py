@@ -20,7 +20,7 @@ class Router:
         self.routing = True
 
     def set_periodic_timer(self):
-        self.periodic_timer = PERIODIC * random.uniform(0.8, 1.2)
+        return PERIODIC * random.uniform(0.8, 1.2)
 
     def create_sockets(self, inputs):
         sockets = []
@@ -33,11 +33,7 @@ class Router:
     def send_update(self, routes):
         for neighbour in self.neighbours:
             packet_to_send = packet.create_packet(routes, self.id, neighbour.id)
-            socket.sendto(neighbour.port ,packet_to_send)
-
-
-    def send_route(self):
-        pass
+            self.out_socket.sendto(neighbour.port, packet_to_send)
 
     def run(self):
         now = time.time()
@@ -67,3 +63,8 @@ class Router:
                 self.send_update(self.routing_table.entries.values())
                 self.periodic_clock = 0
                 self.periodic_timer = self.set_periodic_timer()
+            
+            if exceptional:
+                for sock in exceptional:
+                    self.inputs.remove(sock)
+                    sock.close()

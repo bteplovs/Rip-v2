@@ -30,6 +30,9 @@ class RoutingEntry:
 
     def set_invalid(self):
         self.state = RouteState.INVALID
+    
+    def set_valid(self):
+        self.state = RouteState.VALID
 
 class RoutingTable:
     def __init__(self, router_id):
@@ -59,20 +62,38 @@ class RoutingTable:
                 entry.set_garbage()
                 to_delete.append(destination)
 
-            elif entry.state == RouteState.GARBAGE:
-                to_delete.append(destination)
-
         for destination in to_delete:
             self.delete_route(destination)
 
         return triggered
 
-    def update_routing_table(self, update, neighbours):
+    def update_routing_table(self, recieved_routes):
 
         changed_routes = []
 
+        for destination, metric, sender_id in recieved_routes:
 
-        pass
+            new_metric = min(metric + 1, INFINITY)
+
+            if destination not in self.entries:
+                self.entries[destination] = RoutingEntry(sender_id, new_metric)
+                changed_routes.append(destination)
+            
+            entry = self.entries[destination]
+
+            if new_metric < entry.metric:
+                entry.metric = new_metric
+                entry.next_hop = sender_id
+                entry.reset_clock()
+                entry.set_valid()
+                changed_routes.append(destination)
+            
+            elif entry.next_hop == sender_id:
+                entry.metric = new_metric
+                entry.reset_clock()
+                changed_routes.append(destination)
+        
+        return changed_routes
 
     def __str__(self):
         pass
