@@ -21,7 +21,6 @@ class RoutingTable:
             entry.clock += elapsed_time
 
             if entry.state == routing_entry.RouteState.VALID and entry.clock > TIMEOUT:
-                print(f"  TIMEOUT: dest={destination} clock={entry.clock:.1f}")
                 entry.set_invalid()
                 entry.set_metric_inf()
                 entry.reset_clock()
@@ -35,24 +34,28 @@ class RoutingTable:
 
         return triggered_entries
 
-    def update_routing_table(self, received_routes):
+    def update_routing_table(self, received_routes, neighbours):
         changed_routes = {}
+
         for dest, metric, sender_id in received_routes:
-            print(f"  received: dest={dest} metric={metric} sender={sender_id}")
+            
             if sender_id not in self.entries:
-                print(f"  skipping: sender {sender_id} not in table")
-                continue
+                neighbour = next((n for n in neighbours if n.id == sender_id), None)
+                if neighbour is None:
+                    continue
+                self.entries[sender_id] = routing_entry.RoutingEntry(sender_id, neighbour.metric)
 
             cost_to_sender = self.entries[sender_id].metric
             new_metric = min(metric + cost_to_sender, INFINITY)
 
-            # refresh clock on direct neighbour
+            
             if dest == sender_id:
-                self.entries[dest].reset_clock()
-                self.entries[dest].set_valid()
+                if dest in self.entries:
+                    self.entries[dest].reset_clock()
+                    self.entries[dest].set_valid()
                 continue
 
-            # Create new entry
+            
             if dest not in self.entries:
                 if new_metric < INFINITY:
                     self.entries[dest] = routing_entry.RoutingEntry(sender_id, new_metric)
@@ -61,29 +64,26 @@ class RoutingTable:
 
             entry = self.entries[dest]
 
-            # Invalid metric, update entry
-            if new_metric == INFINITY:
-                entry.set_invalid()
-                entry.set_metric_inf()
+            
+            if entry.next_hop == sender_id:
                 entry.reset_clock()
-                changed_routes[dest] = entry
+                if new_metric >= INFINITY:
+                    entry.set_invalid()
+                    entry.set_metric_inf()
+                    changed_routes[dest] = entry
+                elif entry.metric != new_metric:
+                    entry.metric = new_metric
+                    entry.set_valid()
+                    changed_routes[dest] = entry
+                else:
+                    entry.set_valid()
 
-            # If metrics improve update entry
             elif new_metric < entry.metric:
                 entry.metric = new_metric
                 entry.next_hop = sender_id
                 entry.reset_clock()
                 entry.set_valid()
                 changed_routes[dest] = entry
-            
-            # If next hop is sender, update entry
-            elif entry.next_hop == sender_id:
-                entry.metric = new_metric
-                entry.reset_clock()
-                entry.set_valid()
-                changed_routes[dest] = entry
-            else:
-                entry.reset_clock()
 
         return changed_routes
 

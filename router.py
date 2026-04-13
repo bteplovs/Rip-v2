@@ -1,6 +1,6 @@
 import socket
 import routing_table
-from constant import *
+import constant
 import time
 import select
 import random
@@ -20,20 +20,20 @@ class Router:
         self.routing = True
 
     def set_periodic_timer(self):
-        return PERIODIC * random.uniform(0.8, 1.2)
+        return constant.PERIODIC * random.uniform(0.8, 1.2)
 
     def create_sockets(self, inputs):
         sockets = []
         for input in inputs:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.bind((LOCALHOST, input))
+            s.bind((constant.LOCALHOST, input))
             sockets.append(s)
         return sockets
     
     def send_update(self, entries):
         for neighbour in self.neighbours:
             packet_to_send = packet.create_packet(entries, self.id, neighbour.id)
-            self.out_socket.sendto(packet_to_send, (LOCALHOST, neighbour.port))
+            self.out_socket.sendto(packet_to_send, (constant.LOCALHOST, neighbour.port))
 
     def run(self):
         now = time.time()
@@ -52,11 +52,11 @@ class Router:
 
             if readable:
                 for sock in readable:
-                    data, address = sock.recvfrom(BUFFER)
+                    data, address = sock.recvfrom(constant.BUFFER)
                     # Returns RoutingEntry objects
                     update = packet.process_packet(data)
                     if update:
-                        changed = self.routing_table.update_routing_table(update)
+                        changed = self.routing_table.update_routing_table(update, self.neighbours)
                         if changed:
                             self.send_update(changed.items())
                             

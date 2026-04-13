@@ -1,6 +1,4 @@
 from constant import *
-from routing_table import RoutingEntry
-
 
 class RIPHeader:
     def __init__(self, router_id):
