@@ -61,7 +61,7 @@ class Router:
                             self.send_update(changed.items())
                             
             # Returns RoutingEntry objects
-            updates = self.routing_table.update_route_timers(elapsed_time)
+            updates = self.routing_table.update_route_status(elapsed_time)
             if updates:
                 self.send_update(updates)
                 print(self.routing_table)
