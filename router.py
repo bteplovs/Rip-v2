@@ -1,4 +1,4 @@
-from socket import *
+import socket
 import routing_table
 from constant import *
 import time
@@ -25,7 +25,7 @@ class Router:
     def create_sockets(self, inputs):
         sockets = []
         for input in inputs:
-            s = socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.bind((LOCALHOST, input))
             sockets.append(s)
         return sockets
@@ -33,10 +33,15 @@ class Router:
     def send_update(self, routes):
         for neighbour in self.neighbours:
             packet_to_send = packet.create_packet(routes, self.id, neighbour.id)
-            self.out_socket.sendto(neighbour.port, packet_to_send)
+            self.out_socket.sendto(packet_to_send, (LOCALHOST, neighbour.port))
 
     def run(self):
         now = time.time()
+
+        #populate initial routing table
+        for neighbour in self.neighbours:
+            _, metric, rid = neighbour.port, neighbour.metric, neighbour.id
+            self.routing_table.add_route(rid, rid, metric)
 
         while self.routing:
             current = time.time()
@@ -47,28 +52,26 @@ class Router:
 
             readable, _, exceptional = select.select(self.sockets, [], self.sockets, 1)
 
-            for sock in readable:
-                data, address = sock.recvfrom(BUFFER)
-                update = packet.process_packet(data)
-                if update:
-                    changed_routes = self.routing_table.update_routing_table(update, address)
-                    if changed_routes:
-                        self.send_update(changed_routes)
-                        print("Printing RT after updated route values")
-                        self.routing_table.__str__()
+            if readable:
+                for sock in readable:
+                    data, address = sock.recvfrom(BUFFER)
+                    update = packet.process_packet(data)
+                    if update:
+                        changed_routes = self.routing_table.update_routing_table(update, address)
+                        if changed_routes:
+                            self.send_update(changed_routes)
+                            print(self.routing_table)
                     
             updates = self.routing_table.update_route_timers(elapsed_time)
             if updates:
                 self.send_update(updates)
-                print("Printing RT after updated route timers")
-                self.routing_table.__str__()
+                print(self.routing_table)
 
             if self.periodic_clock >= self.periodic_timer:
                 self.send_update(self.routing_table.entries.values())
                 self.periodic_clock = 0
                 self.periodic_timer = self.set_periodic_timer()
-                print("Printing RT after periodic update")
-                self.routing_table.__str__()
+                print(self.routing_table)
             
             if exceptional:
                 for sock in exceptional:

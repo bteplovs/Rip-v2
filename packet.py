@@ -2,18 +2,17 @@ from constant import *
 from routing_table import RoutingEntry
 
 class RIPHeader:
-    def __init__(self, id):
+    def __init__(self, router_id):
         self.data = bytearray(4)
         self.data[0] = COMMAND_RESPONSE
         self.data[1] = VERSION
-        self.data[2:4] = id.to_bytes(2, "big")
+        self.data[2:4] = router_id.to_bytes(2, "big")
 
 class RIPEntry:
     def __init__(self, next_hop, metric):
         self.data = bytearray(4)
-        self.data[0:2] = next_hop
-        self.data[2:4] = metric
-
+        self.data[0:2] = next_hop.to_bytes(2, "big")
+        self.data[2:4] = metric.to_bytes(2, "big")
 
 def process_packet(data):
 
@@ -42,17 +41,14 @@ def process_packet(data):
 
     return routes
 
-def create_packet(routes, id, neighbour_id):
-    packet = RIPHeader(id)
-
-    for route in routes.values():
-
+def create_packet(routes, router_id, neighbour_id):
+    payload = bytearray()
+    payload.extend(RIPHeader(router_id).data)
+    for route in routes:
         metric = apply_poison_reverse(route, neighbour_id)
+        payload.extend(RIPEntry(route.next_hop, metric).data)
+    return payload
 
-        entry = RIPEntry(route.next_hop.to_bytes(2, "big"), metric.to_bytes(2, "big"))
-        packet.data.extend(entry)
-
-    return packet
 
 def apply_poison_reverse(route, neighbour_id):
     if route.next_hop == neighbour_id:

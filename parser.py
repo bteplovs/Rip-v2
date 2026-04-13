@@ -18,9 +18,6 @@ class Parser:
         config = configparser.ConfigParser()
         config.read(config_path)
 
-        # TODO: The first three parameters (router-id, input-ports, outputs) are mandatory
-        # TODO: Descriptive error messages!
-
         router = config["Router"]
         router_id = int(router["router-id"])
         input_ports = [int(p.strip()) for p in router["input-ports"].split(",")]

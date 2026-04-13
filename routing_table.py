@@ -39,15 +39,15 @@ class RoutingTable:
         self.id = router_id
         self.entries = {}
     
-    def add_route(self, destination, routing_entry):
-        self.entries[destination] = routing_entry
+    def add_route(self, destination, next_hop, metric):
+        self.entries[destination] = RoutingEntry(next_hop, metric)
     
     def delete_route(self, destination):
         self.entries.pop(destination, None)
 
     def update_route_timers(self, elapsed_time):
         to_delete = []
-        triggered = []
+        triggered_entries = []
 
         for destination, entry in self.entries.items():
             entry.clock += elapsed_time
@@ -56,7 +56,7 @@ class RoutingTable:
                 entry.set_invalid()
                 entry.set_metric_inf()
                 entry.reset_clock()
-                triggered.append((destination, entry))
+                triggered_entries.append(entry)
 
             elif entry.state == RouteState.INVALID and entry.clock > GARBAGE:
                 entry.set_garbage()
@@ -65,7 +65,7 @@ class RoutingTable:
         for destination in to_delete:
             self.delete_route(destination)
 
-        return triggered
+        return triggered_entries
 
     def update_routing_table(self, recieved_routes):
 
@@ -96,10 +96,12 @@ class RoutingTable:
         return changed_routes
 
     def __str__(self):
-        wall = ("#" * 52)
-        output = [wall, "| Router Id | Next Hop | Metric | Clock | Status |"]
-        for route in self.entries:
-            output.append(f"| {self.id} | {route.next_hop} | {route.metric} | {route.clock} | {route.status} |")
-        output.append(wall)
-        return output
+        header = f"{'Dest':>6} {'Next Hop':>9} {'Metric':>7} {'Clock':>7} {'State':>8}"
+        divider = "-" * len(header)
+        title = f"Routing Table (Router {self.id})"
+        lines = [title, divider, header, divider]
+        for dest, e in self.entries.items():
+            lines.append(f"{dest:>6} {e.next_hop:>9} {e.metric:>7} {e.clock:>7.1f} {e.state.name:>8}")
+        lines.append(divider)
+        return "\n".join(lines)
         
