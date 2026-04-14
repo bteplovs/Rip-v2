@@ -95,18 +95,17 @@ class Router:
             if readable:
                 for sock in readable:
                     data, _ = sock.recvfrom(constant.BUFFER)
-                    # Returns RoutingEntry objects
                     routes = packet.process_packet(data)
                     if routes:
                         invalid_routes = self.routing_table.update_routing_table(routes, self.neighbours)
                         if invalid_routes:
-                            self.send_update(invalid_routes.items())
+                            self.send_update(self.routing_table.entries.items())
+
                             
-            # Returns RoutingEntry objects
             updates = self.routing_table.update_route_status(elapsed_time)
             if updates:
                 print("### Triggered update ###")
-                self.send_update(updates)
+                self.send_update(self.routing_table.entries.items())
                 print(self.routing_table)
 
             if self.periodic_clock >= self.periodic_timer:
