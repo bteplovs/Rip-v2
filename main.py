@@ -5,12 +5,34 @@ import parser
 import router
 
 def get_config_path(config_file):
+        """
+        Retrives a locally stored config file.
+
+        Args: 
+            config_file: Name of the config file
+
+        Returns: 
+            The full file path of the config file
+        """
         return os.path.join("config-files", config_file)
 
 def config_file_exists(file_path):
+        """
+        Checks that a file path exists.
+
+        Args: 
+            file_path: The path being checked.
+
+        Returns: 
+            True, if filepath exists, False otherwise
+        """
         return os.path.isfile(file_path)
 
 def main():
+    """
+    The main entry point to the application. Any user reponse and interaction is handled in this function.
+    Accepts and parses the config file. Passes the parsed config into a new router instance and runs the router
+    """
     if len(sys.argv) != 2:
         print("ERROR: One command-line argument required: config-file")
         sys.exit(1)
@@ -27,12 +49,11 @@ def main():
         print(f"Reading {config_file}...")
         parsed_router = parser.Parser()
         parsed_router.read_config(file_path)
-        print(f"{config_file} successfully read")
     except Exception as e:
         print("ERROR:", e)
 
     try:
-        print(f"Initilising RIP router with ID: {parsed_router.router_id}")
+        print(f"RIP router {parsed_router.router_id} started")
         RIP_router = router.Router(parsed_router.router_id, parsed_router.input_ports, parsed_router.neighbours)
         RIP_router.run()
     except Exception as e:
