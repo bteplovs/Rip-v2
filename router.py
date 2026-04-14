@@ -1,10 +1,11 @@
-import socket
+
 import routing_table
 import constant
-import time
+import socket
 import select
 import random
 import packet
+import time
 
 class Router:
     """A class representing a router.

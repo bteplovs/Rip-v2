@@ -1,3 +1,4 @@
+
 from constant import *
 import routing_entry
 
@@ -13,7 +14,6 @@ class RoutingTable:
         
         Args:
             router_id: The id of the router parsed from the config file.
-        
         """
         self.id = router_id
         self.entries = {}

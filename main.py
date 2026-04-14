@@ -1,12 +1,12 @@
-import sys
-import os
 
 import parser
 import router
 
+import sys
+import os
+
 def get_config_path(config_file):
-        """
-        Retrives a locally stored config file.
+        """Retrives a locally stored config file.
 
         Args: 
             config_file: Name of the config file
@@ -17,8 +17,7 @@ def get_config_path(config_file):
         return os.path.join("config-files", config_file)
 
 def config_file_exists(file_path):
-        """
-        Checks that a file path exists.
+        """Checks that a file path exists.
 
         Args: 
             file_path: The path being checked.
@@ -30,8 +29,7 @@ def config_file_exists(file_path):
 
 def main():
     """
-    The main entry point to the application. Any user reponse and interaction is handled in this function.
-    Accepts and parses the config file. Passes the parsed config into a new router instance and runs the router
+    The main entry point to the application.
     """
     if len(sys.argv) != 2:
         print("ERROR: One command-line argument required: config-file")
