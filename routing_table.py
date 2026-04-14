@@ -84,7 +84,6 @@ class RoutingTable:
         
         Returns:
             changed_routes: Changed routes are returned as part of a triggered update
-        
         """
         changed_routes = {}
 
@@ -149,8 +148,7 @@ class RoutingTable:
         return changed_routes
 
     def __str__(self):
-        """Returns a human-readable representation of the routing table.
-        """
+        """Returns a human-readable representation of the routing table."""
         header = f"{'Dest':>6} {'Next Hop':>9} {'Metric':>7} {'Clock':>7} {'State':>8}"
         divider = "-" * len(header)
         title = f"# Routing Table (Router {self.id}) #".center(len(header))
