@@ -99,7 +99,7 @@ class RoutingTable:
             cost_to_sender = self.entries[next_hop].metric
             new_metric = min(metric + cost_to_sender, INFINITY)
 
-            # Route to self, recieved, keep alive
+            # advertises self, recieved, keep alive
             if dest == next_hop:
                 if dest in self.entries:
                     self.entries[dest].reset_clock()
@@ -113,11 +113,10 @@ class RoutingTable:
 
             entry = self.entries[dest]
 
-            #if sender is next_hop
+            # if sender is next_hop
             if entry.next_hop == next_hop:
                 entry.reset_clock()
 
-                # check metric validity
                 if new_metric >= INFINITY:
                     entry.set_invalid()
                     entry.set_metric_inf()
@@ -131,7 +130,6 @@ class RoutingTable:
                 else:
                     entry.set_valid()
 
-            # better metric recieved from non-neighbour rtr, converge on new path
             elif new_metric < entry.metric:
                 entry.metric = new_metric
                 entry.next_hop = next_hop

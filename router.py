@@ -48,7 +48,7 @@ class Router:
         return constant.PERIODIC * random.uniform(0.8, 1.2)
 
     def create_sockets(self, inputs):
-        """Creates UDP sockets for the router using input ports
+        """Creates UDP sockets for the router using its input ports
 
         Args:
             inputs: The input ports parsed from the config file.
@@ -64,7 +64,7 @@ class Router:
         return sockets
     
     def send_update(self, entries):
-        """The main function for sending updates to neighbours. uses .sendto() to send UDP updates
+        """The primary function for sending updates to neighbours. uses .sendto() to send UDP datagrams
         to all neighbours.
         
         Args:
