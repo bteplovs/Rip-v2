@@ -41,9 +41,7 @@ class RoutingTable:
         """Updates the status of router entries. for each entry, if the entry 
         is valid and the the entries internal clock is older than the TIMEOUT then
         the status of the entry is set to INVALID, metric is set to INFINITY (16)
-        and the clock is reset
-
-        if the entry is invalid and the the entries internal clock is older than the GARBAGE timer then
+        and the clock is reset. If the entry is invalid and the the entries internal clock is older than the GARBAGE timer then
         the entry is queued for deletion
         
         Args:
@@ -76,26 +74,9 @@ class RoutingTable:
 
     def update_routing_table(self, received_routes, neighbours):
         """Updates the routing table using recieved routes from other RIP routers.
-        For each route, check if the entry exists, if not, try find it in neighbours (previous neighbour may have crashed).
-        If neighbour, create entry
-
-        Calculates new metric
-
-        Checks:
-
-        If a route advertises itself, then reset clock, and set valid.
-
-        If a route is newly discovered, then create a new entry
-
-        If an entry was originally learned from the same sender that sent the current sender, keep the route alive.
-
-            If the metric is invalid (INF), then change the state of the entry to invalid
-
-            Elif a new metric is advertised, change the metric and set valid
-
-            Else set the entry valid
-        
-        If a better metric is advertised then update the entry, set valid, and reset clock
+        For each route, checks if the entry exists currently or was a neighbour. Computes 
+        a new metric. Then checks incoming entries, using dest, metric, sender_id (next_hop)
+        and updates the routing table accordingly
         
         Args:
             received_routes: Routes recieved from recieved from other RIP routers
@@ -109,25 +90,24 @@ class RoutingTable:
 
         for dest, metric, sender_id in received_routes:
             
-            # Check removed route
+            # To handle deleted nieghbours
             if sender_id not in self.entries:
                 neighbour = next((n for n in neighbours if n.id == sender_id), None)
                 if neighbour is None:
                     continue
                 self.entries[sender_id] = routing_entry.RoutingEntry(sender_id, neighbour.metric)
 
-            # calculate new metric
             cost_to_sender = self.entries[sender_id].metric
             new_metric = min(metric + cost_to_sender, INFINITY)
 
-            # If a route advertises itself, reset timer, set valid
+            # Route to self, recieved, keep alive
             if dest == sender_id:
                 if dest in self.entries:
                     self.entries[dest].reset_clock()
                     self.entries[dest].set_valid()
                 continue
 
-            # If a route is newly discovered
+            # If a route is newly discovered, add and continue
             if dest not in self.entries:
                 if new_metric < INFINITY:
                     self.entries[dest] = routing_entry.RoutingEntry(sender_id, new_metric)
@@ -136,24 +116,29 @@ class RoutingTable:
 
             entry = self.entries[dest]
 
-            # If entry was learned from same sender, keep alive
+            # for the entry of this destination, if the next_hop matches sender_id, we are recieving routing info from neighbour
+
+            #if sender is next_hop
             if entry.next_hop == sender_id:
                 entry.reset_clock()
-                # If metric is invalid (Unreachable)
+
+                # check metric validity
                 if new_metric >= INFINITY:
                     entry.set_invalid()
                     entry.set_metric_inf()
                     changed_routes[dest] = entry
-                # if neighbour advertises new metric, trust neighbour
+
+                # metric is valid, trust new metric from neighbour
                 elif entry.metric != new_metric:
                     entry.metric = new_metric
                     entry.set_valid()
                     changed_routes[dest] = entry
-                # Metric stayed the same, reset validity
+
+                # metric stays the same, keep alive
                 else:
                     entry.set_valid()
 
-            # If new metric improved on previous, update the entry 
+            # if metric recieved from non-neighbour rtr, converge on new path
             elif new_metric < entry.metric:
                 entry.metric = new_metric
                 entry.next_hop = sender_id

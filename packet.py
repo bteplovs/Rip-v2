@@ -19,6 +19,10 @@ def process_packet(data):
         return None
 
     sender_id = int.from_bytes(data[2:4], "big")
+
+    if sender_id < MIN_ROUTER_ID or sender_id > MAX_ROUTER_ID:
+        return None
+
     entries = data[4:]
 
     if len(entries) % 4 != 0:
@@ -30,7 +34,9 @@ def process_packet(data):
         destination = int.from_bytes(chunk[0:2], "big")
         metric = int.from_bytes(chunk[2:4], "big")
 
-        if metric < 1 or metric > INFINITY:
+        if metric < 0 or metric > INFINITY:
+            continue
+        if destination < MIN_ROUTER_ID or destination > MAX_ROUTER_ID:
             continue
 
         routes.append((destination, metric, sender_id))
@@ -40,7 +46,10 @@ def process_packet(data):
 def create_packet(routes, router_id, neighbour_id):
     payload = bytearray()
     payload.extend(RIPHeader(router_id).data)
-    payload.extend(RIPEntry(router_id, 1).data)
+
+    # advertise self as metric: zero
+    payload.extend(RIPEntry(router_id, 0).data)
+
     for dest, entry in routes:
         metric = apply_poison_reverse(entry, neighbour_id)
         payload.extend(RIPEntry(dest, metric).data)
