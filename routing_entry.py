@@ -11,7 +11,7 @@ class RouteState(Enum):
     """Route is invalid due to INF metric or clock expiring"""
 
 class RoutingEntry:
-    """A class representing a routing table entry
+    """A class representing a routing table entry.
 
     Attributes:
         next_hop: The next hop used to reach the destination.
@@ -37,7 +37,7 @@ class RoutingEntry:
         self.clock = 0
 
     def set_metric(self, metric):
-        """Sets a routes metric
+        """Sets a routes metric.
         
         Args:
             metric: The updated cost associated with the route.

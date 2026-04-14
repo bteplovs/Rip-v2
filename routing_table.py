@@ -2,7 +2,7 @@ from constant import *
 import routing_entry
 
 class RoutingTable:
-    """A class representing a routers routing table.
+    """A class representing a router's routing table.
     
     Attributes:
         id: The id of the router parsed from the config file
