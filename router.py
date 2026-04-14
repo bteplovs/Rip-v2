@@ -52,7 +52,7 @@ class Router:
 
             if readable:
                 for sock in readable:
-                    data, address = sock.recvfrom(constant.BUFFER)
+                    data, _ = sock.recvfrom(constant.BUFFER)
                     # Returns RoutingEntry objects
                     update = packet.process_packet(data)
                     if update:
@@ -63,10 +63,12 @@ class Router:
             # Returns RoutingEntry objects
             updates = self.routing_table.update_route_status(elapsed_time)
             if updates:
+                print("### Triggered update ###".center())
                 self.send_update(updates)
                 print(self.routing_table)
 
             if self.periodic_clock >= self.periodic_timer:
+                print("### Periodic update ###".center())
                 self.send_update(self.routing_table.entries.items())
                 self.periodic_clock = 0
                 self.periodic_timer = self.set_periodic_timer()
