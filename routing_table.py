@@ -83,69 +83,62 @@ class RoutingTable:
             neighbours: The peer-routers as defined by the routers config file
         
         Returns:
-            changed_routes: Changed routes are returned as part of a triggered update
+            invalid_routes: invalid routes are returned as part of a triggered update
         """
-        changed_routes = {}
+        invalid_routes = {}
 
-        for dest, metric, sender_id in received_routes:
+        for dest, metric, next_hop in received_routes:
             
-            # To handle deleted nieghbours
-            if sender_id not in self.entries:
-                neighbour = next((n for n in neighbours if n.id == sender_id), None)
+            # Handle deleted nieghbours
+            if next_hop not in self.entries:
+                neighbour = next((n for n in neighbours if n.id == next_hop), None)
                 if neighbour is None:
                     continue
-                self.entries[sender_id] = routing_entry.RoutingEntry(sender_id, neighbour.metric)
+                self.entries[next_hop] = routing_entry.RoutingEntry(next_hop, neighbour.metric)
 
-            cost_to_sender = self.entries[sender_id].metric
+            cost_to_sender = self.entries[next_hop].metric
             new_metric = min(metric + cost_to_sender, INFINITY)
 
             # Route to self, recieved, keep alive
-            if dest == sender_id:
+            if dest == next_hop:
                 if dest in self.entries:
                     self.entries[dest].reset_clock()
                     self.entries[dest].set_valid()
                 continue
 
-            # If a route is newly discovered, add and continue
             if dest not in self.entries:
                 if new_metric < INFINITY:
-                    self.entries[dest] = routing_entry.RoutingEntry(sender_id, new_metric)
-                    changed_routes[dest] = self.entries[dest]
+                    self.entries[dest] = routing_entry.RoutingEntry(next_hop, new_metric)
                 continue
 
             entry = self.entries[dest]
 
-            # for the entry of this destination, if the next_hop matches sender_id, we are recieving routing info from neighbour
-
             #if sender is next_hop
-            if entry.next_hop == sender_id:
+            if entry.next_hop == next_hop:
                 entry.reset_clock()
 
                 # check metric validity
                 if new_metric >= INFINITY:
                     entry.set_invalid()
                     entry.set_metric_inf()
-                    changed_routes[dest] = entry
+                    # As per spec, trigger only if metric is set to INF
+                    invalid_routes[dest] = entry 
 
-                # metric is valid, trust new metric from neighbour
                 elif entry.metric != new_metric:
                     entry.metric = new_metric
                     entry.set_valid()
-                    changed_routes[dest] = entry
 
-                # metric stays the same, keep alive
                 else:
                     entry.set_valid()
 
-            # if metric recieved from non-neighbour rtr, converge on new path
+            # better metric recieved from non-neighbour rtr, converge on new path
             elif new_metric < entry.metric:
                 entry.metric = new_metric
-                entry.next_hop = sender_id
+                entry.next_hop = next_hop
                 entry.reset_clock()
                 entry.set_valid()
-                changed_routes[dest] = entry
 
-        return changed_routes
+        return invalid_routes
 
     def __str__(self):
         """Returns a human-readable representation of the routing table."""
