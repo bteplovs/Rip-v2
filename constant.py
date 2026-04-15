@@ -1,3 +1,7 @@
+"""
+    constant.py
+"""
+
 # RIP PACKET
 VERSION = 2
 COMMAND_RESPONSE = 2

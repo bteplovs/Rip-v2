@@ -1,3 +1,6 @@
+"""
+    parser.py
+"""
 
 from constant import *
 import configparser

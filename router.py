@@ -1,3 +1,6 @@
+"""
+    router.py
+"""
 
 import routing_table
 import constant
@@ -75,14 +78,8 @@ class Router:
             self.out_socket.sendto(packet_to_send, (constant.LOCALHOST, neighbour.port))
 
     def run(self):
-        """
-        Starts the router
-        """
+        """Starts the router"""
         now = time.time()
-
-        # establish neighbours!
-        for neighbour in self.neighbours:
-            self.routing_table.add_route(neighbour.id, neighbour.id, neighbour.metric)
 
         while self.routing:
             current = time.time()

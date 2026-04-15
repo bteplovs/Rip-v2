@@ -1,3 +1,6 @@
+"""
+    Routing_table.py
+"""
 
 from constant import *
 import routing_entry
@@ -88,14 +91,11 @@ class RoutingTable:
 
         for dest, metric, next_hop in received_routes:
             
-            # Handle deleted nieghbours
-            if next_hop not in self.entries:
-                neighbour = next((n for n in neighbours if n.id == next_hop), None)
-                if neighbour is None:
-                    continue
-                self.entries[next_hop] = routing_entry.RoutingEntry(next_hop, neighbour.metric)
+            neighbour = next((n for n in neighbours if n.id == next_hop), None)
+            if neighbour is None:
+                continue
 
-            cost_to_sender = self.entries[next_hop].metric
+            cost_to_sender = neighbour.metric
             new_metric = min(metric + cost_to_sender, INFINITY)
 
             if dest not in self.entries:
