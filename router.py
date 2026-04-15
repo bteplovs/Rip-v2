@@ -80,6 +80,7 @@ class Router:
         """
         now = time.time()
 
+        # establish neighbours!
         for neighbour in self.neighbours:
             self.routing_table.add_route(neighbour.id, neighbour.id, neighbour.metric)
 

@@ -39,7 +39,7 @@ class RoutingTable:
 
     def update_route_status(self, elapsed_time):
         """Updates the status of router entries. for each entry, if the entry 
-        is valid and the the entries internal clock is older than the TIMEOUT then
+        is valid and the the entries internal clock is older than the TIMEOUT timer then
         the status of the entry is set to INVALID, metric is set to INFINITY (16)
         and the clock is reset. If the entry is invalid and the the entries internal clock is older than the GARBAGE timer then
         the entry is queued for deletion
@@ -48,11 +48,10 @@ class RoutingTable:
             elapsed_time: The routers elapsed time. Used to update route clocks
 
         Returns:
-            triggered_entries: If an entry is marked as Invalid a triggered update occurs and shares the
-            metric of triggered entries
+            triggered_entries: True if an entry has timed-out, False otherwise
         """
         to_delete = []
-        triggered_entries = []
+        triggered_entries = False
 
         for destination, entry in self.entries.items():
 
@@ -62,7 +61,7 @@ class RoutingTable:
                 entry.set_invalid()
                 entry.set_metric_inf()
                 entry.reset_clock()
-                triggered_entries.append((destination, entry))
+                triggered_entries = True
 
             elif entry.state == routing_entry.RouteState.INVALID and entry.clock > GARBAGE:
                 to_delete.append(destination) 
@@ -83,9 +82,9 @@ class RoutingTable:
             neighbours: The peer-routers as defined by the routers config file
         
         Returns:
-            invalid_routes: invalid routes are returned as part of a triggered update
+            invalid_routes_found: True if routes are invalidated, False otherwise
         """
-        invalid_routes = {}
+        invalid_routes_found = False
 
         for dest, metric, next_hop in received_routes:
             
@@ -112,7 +111,7 @@ class RoutingTable:
                 if new_metric >= INFINITY: # discard
                     entry.set_invalid()
                     entry.set_metric_inf()
-                    invalid_routes[dest] = entry 
+                    invalid_routes_found = True 
 
                 elif entry.metric > new_metric: # update
                     entry.metric = new_metric
@@ -127,7 +126,7 @@ class RoutingTable:
                 entry.reset_clock()
                 entry.set_valid()
 
-        return invalid_routes
+        return invalid_routes_found
 
     def __str__(self):
         """Returns a human-readable representation of the routing table."""
