@@ -43,7 +43,7 @@ def main():
     file_path = get_config_path(config_file)
 
     if (not config_file_exists(file_path)):
-            print("ERROR: invalid file format")
+            print("ERROR: Failed to find config file: {config_file}")
             sys.exit(1)
     
     try:
@@ -51,14 +51,16 @@ def main():
         parsed_router = parser.Parser()
         parsed_router.read_config(file_path)
     except Exception as e:
-        print("ERROR:", e)
+        print(f"ERROR: Failed to read config file: {config_file} ")
+        sys.exit(1)
 
     try:
-        print(f"RIP router {parsed_router.router_id} started")
         RIP_router = router.Router(parsed_router.router_id, parsed_router.input_ports, parsed_router.neighbours)
         RIP_router.run()
+        print(f"RIP router {parsed_router.router_id} started")
     except Exception as e:
-        print("ERROR:", e)
+        print(f"ERROR: Failed to start router: {parsed_router.router_id}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

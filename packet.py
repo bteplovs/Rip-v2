@@ -60,7 +60,6 @@ def process_packet(data):
     if data[0] != COMMAND_RESPONSE or data[1] != VERSION:
         return None
 
-    # The id of the packet, inferred as the next_hop for all its entries
     next_hop = int.from_bytes(data[2:4], "big")
 
     if next_hop < MIN_ROUTER_ID or next_hop > MAX_ROUTER_ID:
