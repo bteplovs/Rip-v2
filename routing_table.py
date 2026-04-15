@@ -77,7 +77,7 @@ class RoutingTable:
     def update_routing_table(self, received_routes, neighbours):
         """Updates the routing table using recieved routes from other RIP routers.
         For each route, checks if the entry exists currently or was a neighbour. Computes 
-        a new metric. Then checks incoming entries, using dest, metric, sender_id (next_hop)
+        a new metric. Then checks incoming entries, using dest, metric, sending_router
         and updates the routing table accordingly
         
         Args:
@@ -89,23 +89,23 @@ class RoutingTable:
         """
         invalid_routes_found = False
 
-        for dest, metric, next_hop in received_routes:
+        for dest, metric, sending_router in received_routes:
             
-            neighbour = next((n for n in neighbours if n.id == next_hop), None)
+            neighbour = next((n for n in neighbours if n.id == sending_router), None)
             if neighbour is None:
                 continue
 
-            cost_to_sender = neighbour.metric
-            new_metric = min(metric + cost_to_sender, INFINITY)
+            cost_to_sending_router = neighbour.metric
+            new_metric = min(metric + cost_to_sending_router, INFINITY)
 
             if dest not in self.entries:
                 if new_metric < INFINITY:
-                    self.entries[dest] = routing_entry.RoutingEntry(next_hop, new_metric)
+                    self.entries[dest] = routing_entry.RoutingEntry(sending_router, new_metric)
                 continue
 
             entry = self.entries[dest]
 
-            if entry.next_hop == next_hop:
+            if entry.next_hop == sending_router:
                 entry.reset_clock() # heard from our next_hop
 
                 if new_metric >= INFINITY: # discard
@@ -122,7 +122,7 @@ class RoutingTable:
 
             elif new_metric < entry.metric: # new route
                 entry.metric = new_metric
-                entry.next_hop = next_hop
+                entry.next_hop = sending_router
                 entry.reset_clock()
                 entry.set_valid()
 
