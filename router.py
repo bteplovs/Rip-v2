@@ -9,6 +9,7 @@ import select
 import random
 import packet
 import time
+import sys
 
 class Router:
     """A class representing a router.
@@ -119,6 +120,8 @@ class Router:
                         self.sockets.remove(sock)
                         sock.close()
         except KeyboardInterrupt:
-            print(f"RIP Router {self.id} shut down.")
+            print(f"\n### RIP Router {self.id} shut down. ### ")
         except Exception as e:
-            print(f"RIP Router {self.id} failed: {e}")
+            print(f"\n### RIP Router {self.id} failed: {e} ###")
+        finally:
+            sys.exit(1)
