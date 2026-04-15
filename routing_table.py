@@ -99,13 +99,6 @@ class RoutingTable:
             cost_to_sender = self.entries[next_hop].metric
             new_metric = min(metric + cost_to_sender, INFINITY)
 
-            # advertises self, recieved, keep alive
-            if dest == next_hop:
-                if dest in self.entries:
-                    self.entries[dest].reset_clock()
-                    self.entries[dest].set_valid()
-                continue
-
             if dest not in self.entries:
                 if new_metric < INFINITY:
                     self.entries[dest] = routing_entry.RoutingEntry(next_hop, new_metric)
@@ -113,24 +106,22 @@ class RoutingTable:
 
             entry = self.entries[dest]
 
-            # if sender is next_hop
             if entry.next_hop == next_hop:
-                entry.reset_clock()
+                entry.reset_clock() # heard from our next_hop
 
-                if new_metric >= INFINITY:
+                if new_metric >= INFINITY: # discard
                     entry.set_invalid()
                     entry.set_metric_inf()
-                    # As per spec, trigger only if metric is set to INF
                     invalid_routes[dest] = entry 
 
-                elif entry.metric != new_metric:
+                elif entry.metric > new_metric: # update
                     entry.metric = new_metric
                     entry.set_valid()
 
-                else:
+                else: # equal
                     entry.set_valid()
 
-            elif new_metric < entry.metric:
+            elif new_metric < entry.metric: # new route
                 entry.metric = new_metric
                 entry.next_hop = next_hop
                 entry.reset_clock()
