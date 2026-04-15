@@ -35,7 +35,7 @@ def main():
     The main entry point to the application.
     """
     if len(sys.argv) != 2:
-        print("ERROR: One command-line argument required: config-file")
+        print("ERROR: One command-line argument required: config-file.")
         sys.exit(1)
     
     config_file = sys.argv[1]
@@ -43,7 +43,7 @@ def main():
     file_path = get_config_path(config_file)
 
     if (not config_file_exists(file_path)):
-            print("ERROR: Failed to find config file: {config_file}")
+            print("ERROR: Failed to find config file: {config_file}.")
             sys.exit(1)
     
     try:
@@ -51,15 +51,15 @@ def main():
         parsed_router = parser.Parser()
         parsed_router.read_config(file_path)
     except Exception as e:
-        print(f"ERROR: Failed to read config file: {config_file} ")
+        print(f"ERROR: Failed to read config file: {config_file}.")
         sys.exit(1)
 
     try:
         RIP_router = router.Router(parsed_router.router_id, parsed_router.input_ports, parsed_router.neighbours)
         RIP_router.run()
-        print(f"RIP router {parsed_router.router_id} started")
+        print(f"RIP router {parsed_router.router_id} started.")
     except Exception as e:
-        print(f"ERROR: Failed to start router: {parsed_router.router_id}")
+        print(f"ERROR: Failed to start RIP router: {parsed_router.router_id}.")
         sys.exit(1)
 
 if __name__ == "__main__":

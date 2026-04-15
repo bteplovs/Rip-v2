@@ -81,39 +81,44 @@ class Router:
         """Starts the router"""
         now = time.time()
 
-        while self.routing:
-            current = time.time()
-            elapsed_time = current - now
-            now = current
+        try:
+            while self.routing:
+                current = time.time()
+                elapsed_time = current - now
+                now = current
 
-            self.periodic_clock += elapsed_time
+                self.periodic_clock += elapsed_time
 
-            readable, _, exceptional = select.select(self.sockets, [], self.sockets, 1)
+                readable, _, exceptional = select.select(self.sockets, [], self.sockets, 1)
 
-            if readable:
-                for sock in readable:
-                    data, _ = sock.recvfrom(constant.BUFFER)
-                    routes = packet.process_packet(data)
-                    if routes:
-                        invalid_routes = self.routing_table.update_routing_table(routes, self.neighbours)
-                        if invalid_routes:
-                            self.send_update(self.routing_table.entries.items())
+                if readable:
+                    for sock in readable:
+                        data, _ = sock.recvfrom(constant.BUFFER)
+                        routes = packet.process_packet(data)
+                        if routes:
+                            invalid_routes = self.routing_table.update_routing_table(routes, self.neighbours)
+                            if invalid_routes:
+                                self.send_update(self.routing_table.entries.items())
 
-                            
-            updates = self.routing_table.update_route_status(elapsed_time)
-            if updates:
-                print("### Triggered update ###")
-                self.send_update(self.routing_table.entries.items())
-                print(self.routing_table)
+                                
+                updates = self.routing_table.update_route_status(elapsed_time)
+                if updates:
+                    print("### Triggered update ###")
+                    self.send_update(self.routing_table.entries.items())
+                    print(self.routing_table)
 
-            if self.periodic_clock >= self.periodic_timer:
-                print("### Periodic update ###")
-                self.send_update(self.routing_table.entries.items())
-                self.periodic_clock = 0
-                self.periodic_timer = self.set_periodic_timer()
-                print(self.routing_table)
-            
-            if exceptional:
-                for sock in exceptional:
-                    self.inputs.remove(sock)
-                    sock.close()
+                if self.periodic_clock >= self.periodic_timer:
+                    print("### Periodic update ###")
+                    self.send_update(self.routing_table.entries.items())
+                    self.periodic_clock = 0
+                    self.periodic_timer = self.set_periodic_timer()
+                    print(self.routing_table)
+                
+                if exceptional:
+                    for sock in exceptional:
+                        self.sockets.remove(sock)
+                        sock.close()
+        except KeyboardInterrupt:
+            print(f"RIP Router {self.id} shut down.")
+        except Exception as e:
+            print(f"RIP Router {self.id} failed: {e}")
