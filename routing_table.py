@@ -85,9 +85,9 @@ class RoutingTable:
             neighbours: The peer-routers as defined by the routers config file
         
         Returns:
-            invalid_routes_found: True if routes are invalidated, False otherwise
+            invalid_routes: True if routes are invalidated, False otherwise
         """
-        invalid_routes_found = False
+        invalid_routes = False
 
         for dest, metric, sending_router in received_routes:
             
@@ -106,12 +106,12 @@ class RoutingTable:
             entry = self.entries[dest]
 
             if entry.next_hop == sending_router:
-                entry.reset_clock() # heard from our next_hop
+                entry.reset_clock() # advertisement from our next_hop
 
                 if new_metric >= INFINITY: # discard
                     entry.set_invalid()
                     entry.set_metric_inf()
-                    invalid_routes_found = True 
+                    invalid_routes = True 
 
                 elif entry.metric > new_metric: # update
                     entry.metric = new_metric
@@ -126,7 +126,7 @@ class RoutingTable:
                 entry.reset_clock()
                 entry.set_valid()
 
-        return invalid_routes_found
+        return invalid_routes
 
     def __str__(self):
         """Returns a human-readable representation of the routing table."""
