@@ -37,26 +37,23 @@ class Router:
         self.inputs = inputs
         self.neighbours = outputs
 
-        self.timers = timers
         # Unpack timers
-        timeout = timers[0]
-        garbage = timers[1]
-        periodic = timers[2]
+        self.timeout, self.garbage, self.periodic = timers
 
-        self.routing_table = routing_table.RoutingTable(id, timeout, garbage)
-        self.periodic_timer = self.set_periodic_timer(periodic)
+        self.routing_table = routing_table.RoutingTable(id, self.timeout, self.garbage)
+        self.periodic_timer = self.set_periodic_timer()
         self.periodic_clock = 0
         self.sockets = self.create_sockets(inputs)
         self.out_socket = self.sockets[0]
         self.routing = True
 
-    def set_periodic_timer(self, periodic):
+    def set_periodic_timer(self):
         """Sets the routers periodic timer.
         
         Returns:
             A value that is uniformly distributed over the range [0.8 · PERIODIC, 1.2 · PERIODIC]
         """
-        return periodic * random.uniform(0.8, 1.2)
+        return self.periodic * random.uniform(0.8, 1.2)
 
     def create_sockets(self, inputs):
         """Creates UDP sockets for the router using its input ports
@@ -111,12 +108,10 @@ class Router:
                                 
                 updates = self.routing_table.update_route_status(elapsed_time)
                 if updates:
-                    print("### Triggered update ###")
                     self.send_update(self.routing_table.entries.items())
                     print(self.routing_table)
 
                 if self.periodic_clock >= self.periodic_timer:
-                    print("### Periodic update ###")
                     self.send_update(self.routing_table.entries.items())
                     self.periodic_clock = 0
                     self.periodic_timer = self.set_periodic_timer()
