@@ -40,17 +40,11 @@ def main():
     try:
         config = parser.Parser()
         config.read_config(file_path)
-        print(f"File {config_file} read.")
-    except Exception as e:
-        print(f"ERROR: Failed to read config file: {config_file}.")
-        print(e)
-        sys.exit(1)
-
-    try:
         RIP_router = router.Router(config.router_id, config.input_ports, config.neighbours, config.timers)
         RIP_router.run()
         print(f"RIP router {parsed_router.router_id} started.")
-    except:
+    except Exception as e:
+        print(e)
         sys.exit(1)
 
 if __name__ == "__main__":

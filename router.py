@@ -123,7 +123,6 @@ class Router:
                         sock.close()
         except KeyboardInterrupt:
             print(f"\n### RIP Router {self.id} shut down. ### ")
-        except Exception as e:
-            print(f"\n### RIP Router {self.id} failed: {e} ###")
-        finally:
+            sys.exit(0)
+        except Exception:
             sys.exit(1)
