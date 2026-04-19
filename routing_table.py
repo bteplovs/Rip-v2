@@ -85,7 +85,7 @@ class RoutingTable:
             neighbours: The peer-routers as defined by the routers config file
         
         Returns:
-            invalid_routes: True if routes are invalidated, False otherwise
+            invalid_routes: True if atleast one route is invalidated, False otherwise
         """
         invalid_routes = False
 

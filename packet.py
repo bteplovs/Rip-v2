@@ -85,12 +85,6 @@ def process_packet(data):
         entry = entries[i:i + 20]
         destination = int.from_bytes(entry[4:8], "big")
         metric = int.from_bytes(entry[16:20], "big")
-        
-        print("#" * 10)
-        print(f" router {next_hop} says:")
-        print(f" From me, to router {destination} is")
-        print(f" METRIC: {metric}")
-        print("#" * 10)
 
         if int.from_bytes(entry[2:4], "big") != 0:
             continue
