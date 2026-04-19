@@ -143,6 +143,14 @@ class Parser:
         return outputs
 
     def parse_timers(self, timers):
+        """Parses timers
+
+        Args:
+           output_ports: Timers as defined in the config file
+
+        Returns:
+            outputs: A list timers [timeout, garbage, periodic]
+        """
         timers = [int(t.strip()) for t in timers.split("-")]
         if len(timers) != 3:
             raise ValueError("ERROR: Not all timers provided")
