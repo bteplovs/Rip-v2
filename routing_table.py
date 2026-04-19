@@ -132,7 +132,7 @@ class RoutingTable:
 
     def __str__(self):
         """Returns a human-readable representation of the routing table."""
-        header = f"{'Dest':>6} {'Next Hop':>9} {'Clock':>7} {'State':>8} {'Directly Conn.':>16} {'Metric':>7}"
+        header = f"{'Dest':>6} {'Next Hop':>9} {'Metric':>7} {'Clock':>7} {'State':>8} {'Directly Conn.':>16}"
         divider = "-" * len(header)
         title = f"# Routing Table (Router {self.id}) #".center(len(header))
         lines = ["", title, divider, header, divider]
@@ -142,7 +142,7 @@ class RoutingTable:
                 
                 is_neighbour = any((n for n in self.neighbours if n.id == dest))
 
-                lines.append(f"{dest:>6} {entry.next_hop:>9} {entry.clock:>7.1f} {entry.state.name:>8} {("YES" if is_neighbour else "NO"):>16} {entry.metric:>7}")
+                lines.append(f"{dest:>6} {entry.next_hop:>9} {entry.metric:>7} {entry.clock:>7.1f} {entry.state.name:>8} {("YES" if is_neighbour else "NO"):>16}")
         else:
             lines.append("# NO ENTRIES #".center(len(header)))
 
