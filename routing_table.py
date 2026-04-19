@@ -12,7 +12,7 @@ class RoutingTable:
         id: The id of the router parsed from the config file
         entries: The individual entry for each route in the table
     """
-    def __init__(self, router_id, timeout, garbage):
+    def __init__(self, router_id, neighbours, timeout, garbage):
         """Initialises an Routing Table object.
         
         Args:
@@ -22,6 +22,7 @@ class RoutingTable:
         self.entries = {}
         self.garbage_timer = garbage
         self.timeout_timer = timeout
+        self.neighbours = neighbours
 
     def add_route(self, destination, next_hop, metric):
         """Adds or updates an individual route to the routing table.
@@ -76,7 +77,7 @@ class RoutingTable:
 
         return triggered_entries
 
-    def update_routing_table(self, received_routes, neighbours):
+    def update_routing_table(self, received_routes):
         """Updates the routing table using recieved routes from other RIP routers.
         For each route, checks if the entry exists currently or was a neighbour. Computes 
         a new metric. Then checks incoming entries, using dest, metric, sending_router
@@ -84,7 +85,6 @@ class RoutingTable:
         
         Args:
             received_routes: Routes recieved from recieved from other RIP routers
-            neighbours: The peer-routers as defined by the routers config file
         
         Returns:
             invalid_routes: True if atleast one route is invalidated, False otherwise
@@ -93,7 +93,7 @@ class RoutingTable:
 
         for dest, metric, sending_router in received_routes:
             
-            neighbour = next((n for n in neighbours if n.id == sending_router), None)
+            neighbour = next((n for n in self.neighbours if n.id == sending_router), None)
             if neighbour is None:
                 continue
 
@@ -132,14 +132,17 @@ class RoutingTable:
 
     def __str__(self):
         """Returns a human-readable representation of the routing table."""
-        header = f"{'Dest':>6} {'Next Hop':>9} {'Metric':>7} {'Clock':>7} {'State':>8}"
+        header = f"{'Dest':>6} {'Next Hop':>9} {'Clock':>7} {'State':>8} {'Directly Conn.':>16} {'Metric':>7}"
         divider = "-" * len(header)
         title = f"# Routing Table (Router {self.id}) #".center(len(header))
         lines = ["", title, divider, header, divider]
 
         if self.entries:
             for dest, entry in self.entries.items():
-                lines.append(f"{dest:>6} {entry.next_hop:>9} {entry.metric:>7} {entry.clock:>7.1f} {entry.state.name:>8}")
+                
+                is_neighbour = any((n for n in self.neighbours if n.id == dest))
+
+                lines.append(f"{dest:>6} {entry.next_hop:>9} {entry.clock:>7.1f} {entry.state.name:>8} {("YES" if is_neighbour else "NO"):>16} {entry.metric:>7}")
         else:
             lines.append("# NO ENTRIES #".center(len(header)))
 

@@ -40,7 +40,7 @@ class Router:
         # Unpack timers
         self.timeout, self.garbage, self.periodic = timers
 
-        self.routing_table = routing_table.RoutingTable(id, self.timeout, self.garbage)
+        self.routing_table = routing_table.RoutingTable(id, self.neighbours, self.timeout, self.garbage)
         self.periodic_timer = self.set_periodic_timer()
         self.periodic_clock = 0
         self.sockets = self.create_sockets(inputs)
@@ -101,7 +101,7 @@ class Router:
                         data, _ = sock.recvfrom(constant.BUFFER)
                         routes = packet.process_packet(data)
                         if routes:
-                            invalid_routes = self.routing_table.update_routing_table(routes, self.neighbours)
+                            invalid_routes = self.routing_table.update_routing_table(routes)
                             if invalid_routes:
                                 self.send_update(self.routing_table.entries.items())
 
