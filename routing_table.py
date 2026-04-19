@@ -12,7 +12,7 @@ class RoutingTable:
         id: The id of the router parsed from the config file
         entries: The individual entry for each route in the table
     """
-    def __init__(self, router_id):
+    def __init__(self, router_id, timeout, garbage):
         """Initialises an Routing Table object.
         
         Args:
@@ -20,6 +20,8 @@ class RoutingTable:
         """
         self.id = router_id
         self.entries = {}
+        self.garbage_timer = garbage
+        self.timeout_timer = timeout
 
     def add_route(self, destination, next_hop, metric):
         """Adds or updates an individual route to the routing table.
@@ -60,13 +62,13 @@ class RoutingTable:
 
             entry.clock += elapsed_time
 
-            if entry.state == routing_entry.RouteState.VALID and entry.clock > TIMEOUT:
+            if entry.state == routing_entry.RouteState.VALID and entry.clock > self.timeout_timer:
                 entry.set_invalid()
                 entry.set_metric_inf()
                 entry.reset_clock()
                 triggered_entries = True
 
-            elif entry.state == routing_entry.RouteState.INVALID and entry.clock > GARBAGE:
+            elif entry.state == routing_entry.RouteState.INVALID and entry.clock > self.garbage_timer:
                 to_delete.append(destination) 
 
         for destination in to_delete:

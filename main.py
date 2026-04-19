@@ -47,7 +47,7 @@ def main():
         sys.exit(1)
 
     try:
-        RIP_router = router.Router(config.router_id, config.input_ports, config.neighbours)
+        RIP_router = router.Router(config.router_id, config.input_ports, config.neighbours, config.timers)
         RIP_router.run()
         print(f"RIP router {parsed_router.router_id} started.")
     except:

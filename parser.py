@@ -38,6 +38,7 @@ class Parser:
         self.router_id = -1
         self.input_ports = []
         self.neighbours = []
+        self.timers = [30, 20, 5]
 
     def read_config(self, config_path):
         """Parses the config file and sets Parser attributes.
@@ -51,8 +52,13 @@ class Parser:
         router = config["Router"]
         router_id = int(router["router-id"])
         input_ports = [int(p.strip()) for p in router["input-ports"].split(",")]
+        output_ports = router["outputs"]
 
-        router_neighbours = self.parse_neighbour(router)
+        timers = router.get("timers", None)
+        if timers:
+            self.timers = self.parse_timers(timers)
+
+        router_neighbours = self.parse_neighbour(output_ports)
 
         self.valid_router_id(router_id)
         self.valid_input_ports(input_ports)
@@ -117,17 +123,17 @@ class Parser:
             if neighbour.port in input_set:
                 raise ValueError("ERROR: Duplicate ports")
     
-    def parse_neighbour(self, config):
+    def parse_neighbour(self, output_ports):
         """Parses each output (neighbour)
 
         Args:
-           config: configParser object containing config file
+           output_ports: Output port value
 
         Returns:
             outputs: A list of neighbour objects parsed from config outputs
         """
         outputs = []
-        for entry in config["outputs"].split(","):
+        for entry in output_ports.split(","):
             parts = entry.strip().split("-")
             if len(parts) != 3:
                 raise ValueError("ERROR: Invalid neighbours")
@@ -136,3 +142,24 @@ class Parser:
             outputs.append(Neighbour(port, metric, id))
         return outputs
 
+    def parse_timers(self, timers):
+        timers = [int(t.strip()) for t in timers.split("-")]
+        if len(timers) != 3:
+            raise ValueError("ERROR: Not all timers provided")
+        
+        if 0 in timers:
+            raise ValueError("ERROR: Timer can not be zero")
+
+        timeout = timers[0]
+        garbage = timers[1]
+        periodic = timers[2]
+
+        if (garbage // periodic != 4 or 
+            timeout // periodic != 6 or 
+            (periodic > garbage or 
+            periodic > timeout)):
+            raise ValueError("ERROR: Bad timer ratio")
+        
+        return timers
+        
+            

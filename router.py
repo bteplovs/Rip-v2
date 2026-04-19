@@ -25,7 +25,7 @@ class Router:
         out_socket: The socket used to transmit packets to neighbours.
         routing: Boolean to check if routing is active.
     """
-    def __init__(self, id, inputs, outputs):
+    def __init__(self, id, inputs, outputs, timers):
         """Initialises a Router object
 
         Args:
@@ -36,20 +36,27 @@ class Router:
         self.id = id
         self.inputs = inputs
         self.neighbours = outputs
-        self.routing_table = routing_table.RoutingTable(id)
-        self.periodic_timer = self.set_periodic_timer()
+
+        self.timers = timers
+        # Unpack timers
+        timeout = timers[0]
+        garbage = timers[1]
+        periodic = timers[2]
+
+        self.routing_table = routing_table.RoutingTable(id, timeout, garbage)
+        self.periodic_timer = self.set_periodic_timer(periodic)
         self.periodic_clock = 0
         self.sockets = self.create_sockets(inputs)
         self.out_socket = self.sockets[0]
         self.routing = True
 
-    def set_periodic_timer(self):
+    def set_periodic_timer(self, periodic):
         """Sets the routers periodic timer.
         
         Returns:
             A value that is uniformly distributed over the range [0.8 · PERIODIC, 1.2 · PERIODIC]
         """
-        return constant.PERIODIC * random.uniform(0.8, 1.2)
+        return periodic * random.uniform(0.8, 1.2)
 
     def create_sockets(self, inputs):
         """Creates UDP sockets for the router using its input ports
