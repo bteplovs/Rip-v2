@@ -38,6 +38,7 @@ class Parser:
         self.router_id = -1
         self.input_ports = []
         self.neighbours = []
+        # Default timers
         self.timers = [30, 20, 5]
 
     def read_config(self, config_path):
@@ -146,7 +147,7 @@ class Parser:
         """Parses timers
 
         Args:
-           output_ports: Timers as defined in the config file
+           timers: Timers as defined in the config file
 
         Returns:
             outputs: A list timers [timeout, garbage, periodic]
@@ -162,8 +163,8 @@ class Parser:
         garbage = timers[1]
         periodic = timers[2]
 
-        if (garbage // periodic != 4 or 
-            timeout // periodic != 6 or 
+        if (garbage // periodic not in range(3,5) or 
+            timeout // periodic not in range(5,7) or 
             (periodic > garbage or 
             periodic > timeout)):
             raise ValueError("ERROR: Bad timer ratio")
