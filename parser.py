@@ -112,16 +112,10 @@ class Parser:
             neighbours: A list of neighbour objects parsed from config outputs
         """
         input_set = set(self.input_ports)
-        output_set = set()
 
         for neighbour in neighbours:
             if neighbour.port in input_set:
                 raise ValueError("ERROR: Duplicate ports")
-
-            if neighbour.port in output_set:
-                raise ValueError("ERROR: Duplicate ports")
-
-            output_set.add(neighbour.port)
     
     def parse_neighbour(self, config):
         """Parses each output (neighbour)

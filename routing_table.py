@@ -106,21 +106,21 @@ class RoutingTable:
             entry = self.entries[dest]
 
             if entry.next_hop == sending_router:
-                entry.reset_clock() # advertisement from our next_hop
+                entry.reset_clock()
 
-                if new_metric >= INFINITY: # discard
+                if new_metric >= INFINITY:
                     entry.set_invalid()
                     entry.set_metric_inf()
                     invalid_routes = True 
 
-                elif entry.metric > new_metric: # update
+                elif entry.metric > new_metric:
                     entry.metric = new_metric
                     entry.set_valid()
 
-                else: # equal
+                else: 
                     entry.set_valid()
 
-            elif new_metric < entry.metric: # new route
+            elif new_metric < entry.metric: 
                 entry.metric = new_metric
                 entry.next_hop = sending_router
                 entry.reset_clock()
@@ -136,8 +136,8 @@ class RoutingTable:
         lines = ["", title, divider, header, divider]
 
         if self.entries:
-            for dest, e in self.entries.items():
-                lines.append(f"{dest:>6} {e.next_hop:>9} {e.metric:>7} {e.clock:>7.1f} {e.state.name:>8}")
+            for dest, entry in self.entries.items():
+                lines.append(f"{dest:>6} {entry.next_hop:>9} {entry.metric:>7} {entry.clock:>7.1f} {entry.state.name:>8}")
         else:
             lines.append("# NO ENTRIES #".center(len(header)))
 

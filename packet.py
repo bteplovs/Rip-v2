@@ -30,10 +30,16 @@ class RIPEntry:
     Attributes:
         data: A byte array with the following structure
         +-------------------------------+-------------------------------+
-        |                          Destination                          |
+        |   Address Family Identifier   |           all zero            |
         +-------------------------------+-------------------------------+
-        |                            Metric                             |
-        +-------------------------------+-------------------------------+
+        |                         Destination                           |
+        +---------------------------------------------------------------+
+        |                         all zero                              |
+        +---------------------------------------------------------------+
+        |                         all zero                              |
+        +---------------------------------------------------------------+
+        |                         Metric                                |
+        +---------------------------------------------------------------+
     """
     def __init__(self, destination, metric):
         """Initialises a RIP Entry object
@@ -42,9 +48,13 @@ class RIPEntry:
             destination: The destination node
             metric: The cost associated with the route.
         """
-        self.data = bytearray(4)
-        self.data[0:2] = destination.to_bytes(2, "big")
-        self.data[2:4] = metric.to_bytes(2, "big")
+        self.data = bytearray(20)
+        self.data[0:2] = AF_INET.to_bytes(2, "big")
+        self.data[2:4] = [0,0]
+        self.data[4:8] = destination.to_bytes(4, "big")
+        self.data[8:12] = [0,0,0,0]
+        self.data[12:16] = [0,0,0,0]
+        self.data[16:20] = metric.to_bytes(4, "big")
 
 
 def process_packet(data):
@@ -67,18 +77,34 @@ def process_packet(data):
 
     entries = data[4:]
 
-    if len(entries) % 4 != 0:
+    if len(entries) % 20 != 0:
         return None
 
     routes = []
-    for i in range(0, len(entries), 4):
-        chunk = entries[i:i + 4]
-        destination = int.from_bytes(chunk[0:2], "big")
-        metric = int.from_bytes(chunk[2:4], "big")
+    for i in range(0, len(entries), 20):
+        entry = entries[i:i + 20]
+        destination = int.from_bytes(entry[4:8], "big")
+        metric = int.from_bytes(entry[16:20], "big")
+        
+        print("#" * 10)
+        print(f" router {next_hop} says:")
+        print(f" From me, to router {destination} is")
+        print(f" METRIC: {metric}")
+        print("#" * 10)
+
+        if int.from_bytes(entry[2:4], "big") != 0:
+            continue
+
+        if destination < MIN_ROUTER_ID or destination > MAX_ROUTER_ID:
+            continue
+
+        if int.from_bytes(entry[8:12], "big") != 0:
+            continue
+
+        if int.from_bytes(entry[12:16], "big") != 0:
+            continue
 
         if metric < 0 or metric > INFINITY:
-            continue
-        if destination < MIN_ROUTER_ID or destination > MAX_ROUTER_ID:
             continue
 
         routes.append((destination, metric, next_hop))
