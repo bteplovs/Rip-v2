@@ -163,10 +163,8 @@ class Parser:
         garbage = timers[1]
         periodic = timers[2]
 
-        if (garbage // periodic not in range(3,5) or 
-            timeout // periodic not in range(5,7) or 
-            (periodic > garbage or 
-            periodic > timeout)):
+        if (garbage // periodic != 4 or 
+            timeout // periodic != 6):
             raise ValueError("ERROR: Bad timer ratio")
         
         return timers
