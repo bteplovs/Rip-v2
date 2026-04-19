@@ -21,4 +21,4 @@ MAX_PORT = 64000
 
 # SOCKETS
 LOCALHOST = "127.0.0.1"
-BUFFER = 512
+BUFFER = 512 # Size of Header + (RTE * 25)
